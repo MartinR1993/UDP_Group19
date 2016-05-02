@@ -15,8 +15,7 @@ public class Client {
 
 		Thread Send = new Thread(new Runnable() {
 			public void run() {
-// really?
-				//mener du det?
+
 				DatagramPacket outPacket = null;
 				byte[] outBuf;
 				final int PORT = 8888;
