@@ -11,15 +11,15 @@ import java.util.Scanner;
 public class Client {
 	static DatagramSocket socket = null;
 	static ArrayList<String> messageList  = new ArrayList<String>();
+	static final int PORT = 8888;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 
 		Thread Send = new Thread(new Runnable() {
 			public void run() {
 
 				DatagramPacket outPacket = null;
 				byte[] outBuf;
-				final int PORT = 8888;
 				int sendCounter = new Random().nextInt(1000)+1;
 				String msg;
 
@@ -28,10 +28,9 @@ public class Client {
 						InetAddress address = InetAddress.getByName("localhost");
 						socket = new DatagramSocket();
 
-
 						Scanner scan = new Scanner(System.in);
 						msg = scan.nextLine();
-
+						
 						String packet = sendCounter+"-" + msg;
 						messageList.add(packet);
 
@@ -47,9 +46,6 @@ public class Client {
 
 						System.out.println("Pakker uden kvittering for modtagelse før: " + messageList.size());
 
-//						for (int i = 0; i < messageList.size(); i++) {
-//							System.out.println(messageList.get(i));	
-//						}
 
 					} catch (IOException e) {
 					}		
@@ -78,11 +74,11 @@ public class Client {
 						for (int i = 0; i < messageList.size(); i++) {
 							String findString = messageList.get(i);
 							String[] splittedString = findString.split("-");
-						
-						
-						if (splittedString[0].equals(data)){
-							messageList.remove(i);
-						}
+
+
+							if (splittedString[0].equals(data)){
+								messageList.remove(i);
+							}
 						}
 						System.out.println("Nummer modtaget: "+data);
 
@@ -95,8 +91,19 @@ public class Client {
 		});
 
 		Send.start();
-		receive.start();
-
+		receive.start();		
+		
+		while(!messageList.isEmpty()){
+			DatagramPacket hej = null;
+			for (int i = 0; i < messageList.size(); i++) {
+				messageList.get(i);
+				byte[] Boh = messageList.get(i).getBytes();
+				InetAddress address = InetAddress.getByName("localhost");
+				hej = new DatagramPacket(Boh, Boh.length,address, PORT);
+				
+				socket.send(hej);
+			}
+		}
 	}
 
 }
