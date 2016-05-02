@@ -10,7 +10,8 @@ import java.util.Scanner;
 
 public class Client {
 	static DatagramSocket socket = null;
-	static ArrayList<Integer> packetNrList  = new ArrayList<Integer>();
+	static ArrayList<String> messageList  = new ArrayList<String>();
+
 	public static void main(String[] args) throws IOException {
 
 		Thread Send = new Thread(new Runnable() {
@@ -19,7 +20,6 @@ public class Client {
 				DatagramPacket outPacket = null;
 				byte[] outBuf;
 				final int PORT = 8888;
-				ArrayList<String> messageList  = new ArrayList<String>();
 				int sendCounter = new Random().nextInt(1000)+1;
 				String msg;
 
@@ -29,35 +29,35 @@ public class Client {
 						socket = new DatagramSocket();
 
 
-
-						System.out.println("skriv tekst");
 						Scanner scan = new Scanner(System.in);
 						msg = scan.nextLine();
 
-						String packet = sendCounter+"." + msg;
+						String packet = sendCounter+"-" + msg;
 						messageList.add(packet);
-						packetNrList.add(sendCounter);
 
 						//Laver besked til bytes og sender
 						outBuf = packet.getBytes();
 						outPacket = new DatagramPacket(outBuf, outBuf.length,address, PORT);
-				
-						System.out.println("sender: " + msg);
-						System.out.println("nummer sendt(message): " +sendCounter );
+
+						System.out.println("Sender: " + msg);
+						System.out.println("Nummer sendt(message): " +sendCounter );
 						socket.send(outPacket);
 
 						sendCounter++;					
-					
-						System.out.println(packetNrList.size()+"");
-						
-					} catch (IOException e) {
-					}			
-				}
 
+						System.out.println("Pakker uden kvittering for modtagelse før: " + messageList.size());
+
+//						for (int i = 0; i < messageList.size(); i++) {
+//							System.out.println(messageList.get(i));	
+//						}
+
+					} catch (IOException e) {
+					}		
+				}
 			}
 		});
 
-		
+
 		Thread receive = new Thread(new  Runnable() {
 			public void run() {
 
@@ -75,10 +75,18 @@ public class Client {
 
 						String data = new String(inPacket.getData(), 0, inPacket.getLength());
 
-						int receivedNumber = Integer.parseInt(data);
-						packetNrList.remove(Integer.valueOf(receivedNumber));
+						for (int i = 0; i < messageList.size(); i++) {
+							String findString = messageList.get(i);
+							String[] splittedString = findString.split("-");
+						
+						
+						if (splittedString[0].equals(data)){
+							messageList.remove(i);
+						}
+						}
+						System.out.println("Nummer modtaget: "+data);
 
-						System.out.println("nummer modtaget: "+data);	
+						System.out.println("Pakker uden kvittering for modtagelse: " + messageList.size());
 
 					} catch (IOException | NullPointerException e) {
 					}
