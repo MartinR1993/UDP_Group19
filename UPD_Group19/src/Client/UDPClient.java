@@ -26,60 +26,64 @@ public class UDPClient {
 
 				// hvis der ikke er igang med at blive afsendt noget kan vi tilføje beskeder som skal sendes.
 				if (messageList.isEmpty()) {
+					while(true) {
+						while (createPack) {
+							BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+							try {
+								sentence = inFromUser.readLine();
+								String packet = packetID+"-" + sentence;
 
-					while (createPack) {
-						BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-						try {
-							sentence = inFromUser.readLine();
-							String packet = packetID+"-" + sentence;
+								messageList.add(packet);
 
-							messageList.add(packet);
+								// det sidste brugeren skal skrive er slut, denne besked vil dog ikke blive sendt
+								if (sentence.equals("slut")) {
+									messageList.remove(messageList.size()-1);
+									createPack = false;
+								}
 
-							// det sidste brugeren skal skrive er slut, denne besked vil dog ikke blive sendt
-							if (sentence.equals("slut")) {
-								messageList.remove(messageList.size()-1);
-								createPack = false;
+							} catch (IOException e) {
+								System.out.println(e);
+							}
+							packetID++;
+						}
+
+
+
+						// prøver at sende alle vores pakker 1 gang.
+
+						while (!messageList.isEmpty()) {
+							System.out.println("Pakker uden kvittering for modtagelse før: " + messageList.size());
+							for (int i = 0; i < messageList.size(); i++) {
+								try {
+									InetAddress address = InetAddress.getByName("localhost");
+
+									//Laver besked til bytes og sender
+									sendData = messageList.get(i).getBytes();
+									sendPacket = new DatagramPacket(sendData, sendData.length,address, 9876);
+
+
+									System.out.println("Sender: " + messageList.get(i));
+									clientSocket.send(sendPacket);
+
+									packetID++;					
+
+								} catch (IOException e) {
+									System.out.println(e);
+								}		
 							}
 
-						} catch (IOException e) {
-							System.out.println(e);
-						}
-						packetID++;
-					}
-				}
-
-
-				// prøver at sende alle vores pakker 1 gang.
-				System.out.println("Pakker uden kvittering for modtagelse før: " + messageList.size());
-				while (!messageList.isEmpty()) {
-					for (int i = 0; i < messageList.size(); i++) {
-						try {
-							InetAddress address = InetAddress.getByName("localhost");
-
-							//Laver besked til bytes og sender
-							sendData = messageList.get(i).getBytes();
-							sendPacket = new DatagramPacket(sendData, sendData.length,address, 9876);
-
-
-							System.out.println("Sender: " + messageList.get(i));
-							clientSocket.send(sendPacket);
-
-							packetID++;					
-
-						} catch (IOException e) {
-							System.out.println(e);
+							// venter på ACK et par sekunder før den igen prøver at sende de pakker hvor ACK ikke er modtaget
+							try {
+								Thread.sleep(5000);
+							} catch (InterruptedException e) {
+								System.out.println(e);
+							}
 						}		
-					}
-
-					// venter på ACK et par sekunder før den igen prøver at sende de pakker hvor ACK ikke er modtaget
-					try {
-						Thread.sleep(5000);
-					} catch (InterruptedException e) {
-						System.out.println(e);
+					System.out.println("Du kan sende nyt nu");
+						createPack = true;
 					}
 				}
 			}
-
 
 		});
 
@@ -124,12 +128,12 @@ public class UDPClient {
 
 		sendThread.start();
 		receiveThread.start();		
-		
+
 		if (!sendThread.isAlive() && !receiveThread.isAlive()) {
 			clientSocket.close();
 		}
-		
-		
+
+
 	}
 
 }
