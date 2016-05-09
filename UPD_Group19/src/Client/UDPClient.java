@@ -74,12 +74,11 @@ public class UDPClient {
 
 							// venter på ACK et par sekunder før den igen prøver at sende de pakker hvor ACK ikke er modtaget
 							try {
-								Thread.sleep(5000);
+								Thread.sleep(1000);
 							} catch (InterruptedException e) {
 								System.out.println(e);
 							}
 						}		
-					System.out.println("Du kan sende nyt nu");
 						createPack = true;
 					}
 				}
